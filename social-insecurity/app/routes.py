@@ -1,6 +1,6 @@
 from site import USER_BASE
 from flask import render_template, flash, redirect, url_for, request
-from app import app, query_db
+from app import app, query_db, bcrypt
 from app.forms import IndexForm, PostForm, FriendsForm, ProfileForm, CommentsForm
 from datetime import datetime
 from flask import Flask, render_template, redirect, request, session
@@ -10,7 +10,7 @@ from flask import Flask, render_template, redirect, request, session
 #TODO: Report:  username is taken!
 #TODO: Report: using flask session, geting session.get("name") and using that in base.html
 #TODO: Report: Hide edit key in profile if session.get("name")!=username
-#TODO: 
+#TODO: Report: Installed bcrypt to hash passwords
 
 
 
@@ -27,22 +27,23 @@ def index():
     if form.login.is_submitted() and form.login.submit.data:
         user = query_db('SELECT * FROM Users WHERE username="{}";'.format(form.login.username.data), one=True)
         if user == None:
-            flash('Sorry, this user does not exist!')
-        elif user['password'] == form.login.password.data:
+            flash('Sorry, this user does not exist!','danger')
+        elif bcrypt.check_password_hash(user['password'],form.login.password.data):
             session["name"] = form.login.username.data
-            flash(f'Welcome {session.get("name")}!',)
+            flash(f'Welcome {session.get("name")}!','success')
             return redirect(url_for('stream', username=form.login.username.data))
         else:
-            flash('Sorry, wrong password!')
+            flash('Sorry, wrong password!','danger')
 
     elif form.register.validate_on_submit() and form.register.submit.data:
             user = query_db('SELECT * FROM Users WHERE username="{}";'.format(form.register.username.data))
             if user:
                 flash('Username is taken!')
                 return render_template('index.html', title='Welcome', form=form)
+            hashed_password = bcrypt.generate_password_hash(form.register.password.data).decode('utf-8')
             query_db('INSERT INTO Users (username, first_name, last_name, password) VALUES("{}", "{}", "{}", "{}");'.format(form.register.username.data, form.register.first_name.data,
-            form.register.last_name.data, form.register.password.data))
-            flash(f'Accout created for {form.register.username.data}!','success.')
+            form.register.last_name.data, hashed_password))
+            flash(f'Accout created for {form.register.username.data}!','success')
             return redirect(url_for('index'))
     return render_template('index.html', title='Welcome', form=form)
 

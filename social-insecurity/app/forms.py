@@ -10,8 +10,8 @@ from wtforms.validators import DataRequired, Length, Regexp, EqualTo
 
 
 class LoginForm(FlaskForm):
-    username = StringField('Username', render_kw={'placeholder': 'Username'})
-    password = PasswordField('Password', render_kw={'placeholder': 'Password'})
+    username = StringField('Username', render_kw={'placeholder': 'Username'}, validators=[DataRequired()])
+    password = PasswordField('Password', render_kw={'placeholder': 'Password'}, validators=[DataRequired()])
     remember_me = BooleanField('Remember me') 
     submit = SubmitField('Sign In')
 

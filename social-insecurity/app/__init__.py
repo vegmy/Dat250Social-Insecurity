@@ -1,5 +1,5 @@
 from flask import Flask,g, session
-
+from flask_bcrypt import Bcrypt
 from config import Config
 from flask_bootstrap import Bootstrap
 #TODO report that flask_SQL is imported and why
@@ -19,9 +19,9 @@ app.config['SECRET_KEY'] = '4980b19f16449c5c8385c37ec09f2a44'
 app.config["SESSION_PERMANENT"] = False
 app.config["SESSION_TYPE"] = "filesystem"
 Session(app)
-
 Bootstrap(app)
 app.config.from_object(Config)
+bcrypt = Bcrypt(app)
 #sess = Session(app)
 #sess.init_app(app)
 
