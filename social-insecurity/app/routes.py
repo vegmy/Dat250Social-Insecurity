@@ -16,7 +16,8 @@ import os
 
 def index():
     form = IndexForm()
-    if form.login.is_submitted() and form.login.submit.data:
+    if form.login.is_submitted() and form.login.submit.data and form.login.validate_on_submit:
+        #user = query_db('SELECT * FROM Users WHERE username="%s"',(form.login.username.data,))
         user = query_db('SELECT * FROM Users WHERE username="{}";'.format(form.login.username.data), one=True)
         if user == None:
             flash('Sorry, this user does not exist!','danger')
