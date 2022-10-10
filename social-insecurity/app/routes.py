@@ -5,14 +5,6 @@ from app.forms import IndexForm, PostForm, FriendsForm, ProfileForm, CommentsFor
 from datetime import datetime
 from flask import Flask, render_template, redirect, request, session
 
-#TODO: implement flask is_safe_url(next) to check if the url is safe and if not abort the redirection??
-#TODO: implement hash passwords with bcrypt
-#TODO: Report:  username is taken!
-#TODO: Report: using flask session, geting session.get("name") and using that in base.html
-#TODO: Report: Hide edit key in profile if session.get("name")!=username
-#TODO: Report: Installed bcrypt to hash passwords
-
-
 
 import os
 
@@ -29,13 +21,15 @@ def index():
         if user == None:
             flash('Sorry, this user does not exist!','danger')
         elif bcrypt.check_password_hash(user['password'],form.login.password.data):
+            next_page = (url_for('stream', username=form.login.username.data))
             session["name"] = form.login.username.data
+            session.permanent = True
             flash(f'Welcome {session.get("name")}!','success')
-            return redirect(url_for('stream', username=form.login.username.data))
+            return redirect(next_page) if next_page else redirect(url_for('/index')) 
         else:
             flash('Sorry, wrong password!','danger')
 
-    elif form.register.validate_on_submit() and form.register.submit.data:
+    elif form.register.validate_on_submit():
             user = query_db('SELECT * FROM Users WHERE username="{}";'.format(form.register.username.data))
             if user:
                 flash('Username is taken!')
@@ -51,7 +45,7 @@ def index():
 # content stream page
 @app.route('/stream/<username>', methods=['GET', 'POST'])
 def stream(username ):
-    username = session.get("name")
+    username = session.get("name") #trenger ikke?
     form = PostForm()
     user = query_db('SELECT * FROM Users WHERE username="{}";'.format(username), one=True)
     if form.is_submitted():
@@ -61,8 +55,9 @@ def stream(username ):
 
         query_db('INSERT INTO Posts (u_id, content, image, creation_time) VALUES({}, "{}", "{}", \'{}\');'.format(user['id'], form.content.data, form.image.data.filename, datetime.now()))
         return redirect(url_for('stream', username=username))
-
     posts = query_db('SELECT p.*, u.*, (SELECT COUNT(*) FROM Comments WHERE p_id=p.id) AS cc FROM Posts AS p JOIN Users AS u ON u.id=p.u_id WHERE p.u_id IN (SELECT u_id FROM Friends WHERE f_id={0}) OR p.u_id IN (SELECT f_id FROM Friends WHERE u_id={0}) OR p.u_id={0} ORDER BY p.creation_time DESC;'.format(user['id']))
+    if posts == None:
+        return redirect(url_for())
     return render_template('stream.html', title='Stream', username=username, form=form, posts=posts)
 
 # comment page for a given post and user.

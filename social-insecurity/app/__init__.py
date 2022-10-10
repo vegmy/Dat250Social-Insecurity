@@ -1,15 +1,9 @@
-from flask import Flask,g, session
+from flask import Flask,g
 from flask_bcrypt import Bcrypt
 from config import Config
 from flask_bootstrap import Bootstrap
-#TODO report that flask_SQL is imported and why
-# to use SQLalchemy we had to run: pip install flask-security-too[fsqla,common]
-# and for flask login we ran:  pip install flask-login
-#from flask_login import LoginManager, login_required, login_user, current_user, logout_user
-#from flask_sqlalchemy import SQLAlchemy
-#from flask_security import Security, SQLAlchemyUserDatastore, auth_required, hash_password
 from flask_session import Session
-
+from datetime import timedelta
 import sqlite3
 import os
 
@@ -18,15 +12,11 @@ app = Flask(__name__)
 app.config['SECRET_KEY'] = '4980b19f16449c5c8385c37ec09f2a44'
 app.config["SESSION_PERMANENT"] = False
 app.config["SESSION_TYPE"] = "filesystem"
+app.config['PERMANENT_SESSION_LIFETIME'] =  timedelta(minutes=5)
 Session(app)
 Bootstrap(app)
 app.config.from_object(Config)
 bcrypt = Bcrypt(app)
-#sess = Session(app)
-#sess.init_app(app)
-
-#Sectret key protects against modifying cookies and cross site forgery attacks
-#TODO make the secret key to an enviroment variable
 # get an instance of the db
 def get_db():
     db = getattr(g, '_database', None)
